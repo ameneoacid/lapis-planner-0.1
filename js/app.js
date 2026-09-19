@@ -1,533 +1,130 @@
 const STORAGE_KEY = "lapis-planner-tasks-v1";
 const PROFILE_KEY = "lapis-planner-profile-v1";
 const THEME_KEY = "lapis-planner-theme-v1";
-const BACKGROUNDS = [
-  { id: "midnight", name: "Midnight", price: 0 },
-  { id: "sunset", name: "Sunset", price: 20 },
-  { id: "forest", name: "Forest", price: 35 },
-  { id: "aurora", name: "Aurora", price: 45 },
-  { id: "clouds", name: "Clouds", price: 55 }
-];
 const $ = (selector) => document.querySelector(selector);
-let tasks = loadTasks();
-let profile = loadProfile();
+
+const BACKGROUNDS = [
+  { id: "midnight", name: "Midnight", price: 0, colors: ["#080b16", "#312e81"] },
+  { id: "sunset", name: "Sunset", price: 20, colors: ["#7c2d3d", "#f59e0b"] },
+  { id: "forest", name: "Forest", price: 35, colors: ["#102a2a", "#4d7c0f"] },
+  { id: "aurora", name: "Aurora", price: 45, colors: ["#164e63", "#6d28d9"] },
+  { id: "clouds", name: "Clouds", price: 55, colors: ["#93c5fd", "#c4b5fd"] },
+  { id: "neon", name: "Neon", price: 65, colors: ["#160b35", "#ec4899", "#22d3ee"] },
+  { id: "gamer", name: "Gamer", price: 75, colors: ["#111827", "#22c55e", "#7c3aed"] },
+  { id: "pixel", name: "Pixel", price: 85, colors: ["#172554", "#f472b6", "#facc15"] },
+  { id: "one-piece", name: "One Piece", price: 100, colors: ["#0c4a6e", "#facc15", "#ef4444"] },
+  { id: "longyearbyen", name: "Longyearbyen · Svalbard", price: 120, colors: ["#172554", "#67e8f9", "#f8fafc"] }
+];
+
+let tasks = load(STORAGE_KEY, []).map(normalizeTask);
+let profile = load(PROFILE_KEY, {
+  coins: 0, goal: "Finish 3 important tasks this week", goalTarget: 3,
+  purchasedBackgrounds: ["midnight"], selectedBackground: "midnight", useCase: ""
+});
 let filter = "all";
 let sortMode = "newest";
 
-function loadTasks() {
-  try {
-    const saved = JSON.parse(localStorage.getItem(STORAGE_KEY));
-    return Array.isArray(saved) ? saved.map(normalizeTask) : [];
-  } catch {
-    return [];
-  }
+function load(key, fallback) {
+  try { return JSON.parse(localStorage.getItem(key)) ?? fallback; } catch { return fallback; }
 }
-
-function loadProfile() {
-  try {
-    const saved = JSON.parse(localStorage.getItem(PROFILE_KEY));
-    return {
-      useCase: "",
-      goalTitle: "",
-      goalTarget: 3,
-      coins: 0,
-      purchasedBackgrounds: ["midnight"],
-      selectedBackground: "midnight",
-      streakDates: [],
-      ...saved,
-      purchasedBackgrounds: Array.isArray(saved?.purchasedBackgrounds) && saved.purchasedBackgrounds.length
-        ? saved.purchasedBackgrounds
-        : ["midnight"]
-    };
-  } catch {
-    return {
-      useCase: "",
-      goalTitle: "",
-      goalTarget: 3,
-      coins: 0,
-      purchasedBackgrounds: ["midnight"],
-      selectedBackground: "midnight",
-      streakDates: []
-    };
-  }
-}
-
+function save() { localStorage.setItem(STORAGE_KEY, JSON.stringify(tasks)); }
+function saveProfile() { localStorage.setItem(PROFILE_KEY, JSON.stringify(profile)); }
+function id() { return crypto.randomUUID?.() || `${Date.now()}-${Math.random()}`; }
 function normalizeTask(task) {
-  return {
-    id: String(task.id || makeId()),
-    title: String(task.title || "Untitled task"),
-    category: String(task.category || "other"),
-    priority: String(task.priority || "medium"),
-    done: Boolean(task.done),
-    createdAt: Number(task.createdAt) || Date.now(),
-    completedAt: task.done ? (Number(task.completedAt) || Date.now()) : null
-  };
+  return { id: String(task.id || id()), title: String(task.title || "Untitled task"),
+    category: String(task.category || "other"), priority: String(task.priority || "medium"),
+    done: Boolean(task.done), createdAt: Number(task.createdAt) || Date.now(), completedAt: task.completedAt || null };
 }
-
-function makeId() {
-  return window.crypto?.randomUUID?.() || `${Date.now()}-${Math.random().toString(16).slice(2)}`;
-}
-
-function save() {
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(tasks));
-}
-
-function saveProfile() {
-  localStorage.setItem(PROFILE_KEY, JSON.stringify(profile));
-}
-
-function escapeHtml(value) {
-  return String(value).replace(/[&<>'"]/g, (char) => ({
-    "&": "&amp;",
-    "<": "&lt;",
-    ">": "&gt;",
-    "'": "&#39;",
-    '"': "&quot;"
-  }[char]));
-}
-
-function priorityRank(priority) {
-  return { high: 0, medium: 1, low: 2 }[priority] ?? 3;
-}
-
-function visibleTasks() {
-  const query = $("#search").value.trim().toLowerCase();
-  return tasks
-    .filter((task) => {
-      const matchesFilter = filter === "all" || (filter === "done" ? task.done : !task.done);
-      const haystack = `${task.title} ${task.category} ${task.priority}`.toLowerCase();
-      return matchesFilter && (!query || haystack.includes(query));
-    })
-    .sort((a, b) => {
-      if (sortMode === "priority") return priorityRank(a.priority) - priorityRank(b.priority);
-      if (sortMode === "oldest") return a.createdAt - b.createdAt;
-      return b.createdAt - a.createdAt;
-    });
-}
-
-function formatDate(timestamp) {
-  return new Intl.DateTimeFormat(undefined, { month: "short", day: "numeric" }).format(timestamp);
-}
-
-function dateKey(value) {
-  return new Date(value).toISOString().slice(0, 10);
-}
-
-function getCurrentWeekStart() {
-  const now = new Date();
-  const day = now.getDay();
-  const diff = day === 0 ? -6 : 1 - day;
-  const monday = new Date(now);
-  monday.setHours(0, 0, 0, 0);
-  monday.setDate(now.getDate() + diff);
-  return monday;
-}
-
-function taskCompletedThisWeek(task) {
-  if (!task.done || !task.completedAt) return false;
-  return task.completedAt >= getCurrentWeekStart().getTime();
-}
-
-function getGoalProgress() {
-  const target = Number(profile.goalTarget) || 3;
-  const completed = tasks.filter(taskCompletedThisWeek).length;
-  return { completed, target, percent: target ? Math.min(100, (completed / target) * 100) : 0 };
-}
-
-function updateSummary() {
-  const done = tasks.filter((task) => task.done).length;
-  const total = tasks.length;
-  const percent = total ? Math.round((done / total) * 100) : 0;
-  $("#total-count").textContent = total;
-  $("#done-count").textContent = done;
-  $("#left-count").textContent = total - done;
-  $("#progress-label").textContent = `${percent}%`;
-  $("#progress-bar").style.width = `${percent}%`;
-  $("#progress-copy").textContent = total ? `${done} of ${total} tasks completed.` : "Add a task to get started.";
-}
-
-function updateDashboard() {
-  $("#coin-total").textContent = Number(profile.coins || 0);
-  $("#streak-total").textContent = Number(profile.streakDates?.length ? getCurrentStreak() : 0);
-  $("#streak-best").textContent = Number(getBestStreak());
-
-  const goal = getGoalProgress();
-  $("#goal-title").textContent = profile.goalTitle || "Finish 3 tasks this week";
-  $("#goal-progress-text").textContent = `${goal.completed} / ${goal.target}`;
-  $("#goal-progress-bar").style.width = `${goal.percent}%`;
-
-  renderBackgroundShop();
-}
-
-function getCurrentStreak() {
-  const dates = [...new Set(tasks.filter((task) => task.done && task.completedAt).map((task) => dateKey(task.completedAt)))].sort();
-  if (!dates.length) return 0;
-
-  let cursor = new Date();
-  let streak = 0;
-  while (dates.includes(dateKey(cursor))) {
-    streak += 1;
-    cursor.setDate(cursor.getDate() - 1);
-  }
-  return streak;
-}
-
-function getBestStreak() {
-  const dates = [...new Set(tasks.filter((task) => task.done && task.completedAt).map((task) => dateKey(task.completedAt)))].sort();
-  if (!dates.length) return 0;
-
-  let best = 1;
-  let current = 1;
-
-  for (let index = 1; index < dates.length; index += 1) {
-    const previous = new Date(`${dates[index - 1]}T00:00:00`);
-    const currentDate = new Date(`${dates[index]}T00:00:00`);
-    const difference = (currentDate - previous) / 86400000;
-
-    if (difference === 1) {
-      current += 1;
-      best = Math.max(best, current);
-    } else {
-      current = 1;
-    }
-  }
-
-  return best;
-}
-
+function escape(value) { return String(value).replace(/[&<>'"]/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;","'":"&#39;",'"':"&quot;"}[c])); }
+function dateKey(value) { return new Date(value).toISOString().slice(0, 10); }
 function notify(message) {
   let toast = $("#toast");
-  if (!toast) {
-    toast = document.createElement("div");
-    toast.id = "toast";
-    Object.assign(toast.style, {
-      position: "fixed",
-      bottom: "24px",
-      left: "50%",
-      transform: "translateX(-50%)",
-      zIndex: "20",
-      padding: "10px 16px",
-      borderRadius: "12px",
-      background: "var(--accent)",
-      color: "#101426",
-      fontWeight: "700",
-      boxShadow: "var(--shadow)"
-    });
-    document.body.append(toast);
-  }
-  toast.textContent = message;
-  toast.hidden = false;
-  clearTimeout(notify.timer);
+  if (!toast) { toast = document.createElement("div"); toast.id = "toast"; document.body.append(toast); }
+  toast.textContent = message; toast.hidden = false; clearTimeout(notify.timer);
   notify.timer = setTimeout(() => { toast.hidden = true; }, 2200);
 }
-
-function renderBackgroundShop() {
-  const shop = $("#background-shop");
-  if (!shop) return;
-
-  shop.innerHTML = BACKGROUNDS.map((background) => {
-    const owned = profile.purchasedBackgrounds.includes(background.id);
-    const selected = profile.selectedBackground === background.id;
-    const affordable = profile.coins >= background.price;
-
-    let label = selected ? "Selected" : owned ? "Apply" : `Buy ${background.price}`;
-    if (!owned && !affordable) label = `${background.price} coins`;
-
-    return `
-      <button class="shop-item ${selected ? "active" : ""} ${owned ? "owned" : ""}" type="button" data-background="${background.id}" ${selected ? "aria-pressed=\"true\"" : "aria-pressed=\"false\""}>
-        <span class="shop-swatch" style="background:${background.id === "midnight" ? "linear-gradient(135deg,#0d1326,#6a5cff)" : background.id === "sunset" ? "linear-gradient(135deg,#ff8b5e,#f7d76d)" : background.id === "forest" ? "linear-gradient(135deg,#244d4d,#90d66f)" : background.id === "aurora" ? "linear-gradient(135deg,#1e5f74,#7ef9d5)" : "linear-gradient(135deg,#cbd6ff,#7f92ff)"};"></span>
-        <span>
-          <strong>${background.name}</strong>
-          <small>${owned ? "Unlocked" : `${background.price} coins`}</small>
-        </span>
-        <em>${label}</em>
-      </button>
-    `;
+function currentStreak() {
+  const dates = new Set(tasks.filter(t => t.done && t.completedAt).map(t => dateKey(t.completedAt)));
+  let day = new Date(), count = 0;
+  while (dates.has(dateKey(day))) { count++; day.setDate(day.getDate() - 1); }
+  return count;
+}
+function weekProgress() {
+  const start = new Date(); const day = start.getDay();
+  start.setHours(0, 0, 0, 0); start.setDate(start.getDate() + (day === 0 ? -6 : 1 - day));
+  const completed = tasks.filter(t => t.done && t.completedAt >= start.getTime()).length;
+  const target = Math.max(1, Number(profile.goalTarget) || 3);
+  return { completed, target, percent: Math.min(100, completed / target * 100) };
+}
+function setBackground(background) {
+  const colors = background.colors;
+  document.body.style.background = `radial-gradient(circle at 15% 15%, ${colors[1]}66, transparent 35%), linear-gradient(135deg, ${colors[0]}, ${colors.at(-1)})`;
+  document.body.dataset.background = background.id;
+}
+function renderShop() {
+  let shop = $("#background-shop");
+  if (!shop) {
+    shop = document.createElement("section"); shop.id = "background-shop"; shop.className = "panel background-shop";
+    shop.innerHTML = '<div class="section-head"><div><span class="eyebrow">The collection</span><h2>Backgrounds</h2></div><strong id="coin-total">0 coins</strong></div><div class="shop-grid"></div>';
+    $("footer")?.before(shop);
+  }
+  $("#coin-total").textContent = `${profile.coins || 0} coins`;
+  shop.querySelector(".shop-grid").innerHTML = BACKGROUNDS.map(bg => {
+    const owned = profile.purchasedBackgrounds.includes(bg.id);
+    const active = profile.selectedBackground === bg.id;
+    const swatch = `linear-gradient(135deg, ${bg.colors.join(", ")})`;
+    return `<button class="shop-item ${active ? "active" : ""}" data-background="${bg.id}" type="button">
+      <span class="shop-swatch" style="background:${swatch}"></span><span><strong>${bg.name}</strong><small>${owned ? "Unlocked" : `${bg.price} coins`}</small></span><em>${active ? "Selected" : owned ? "Apply" : "Unlock"}</em></button>`;
   }).join("");
 }
-
-function applyBackground(backgroundId = profile.selectedBackground) {
-  document.body.dataset.background = backgroundId;
-  localStorage.setItem(THEME_KEY, document.documentElement.classList.contains("light") ? "light" : "dark");
-}
-
 function render() {
-  const list = $("#task-list");
-  const shown = visibleTasks();
-
-  list.innerHTML = shown.map((task) => `
-    <li class="task ${task.done ? "done" : ""}" data-id="${escapeHtml(task.id)}">
-      <button class="check" data-action="toggle" type="button" aria-label="Mark ${escapeHtml(task.title)} as ${task.done ? "active" : "complete"}"></button>
-      <div>
-        <div class="title">${escapeHtml(task.title)}</div>
-        <div class="meta">
-          <span class="tag">${escapeHtml(task.category)}</span>
-          <span>${escapeHtml(task.priority)} priority</span>
-          <span>added ${formatDate(task.createdAt)}</span>
-        </div>
-      </div>
-      <div class="task-actions">
-        <button class="task-action" data-action="duplicate" type="button">Copy</button>
-        <button class="task-action" data-action="edit" type="button">Edit</button>
-        <button class="task-action delete" data-action="delete" type="button">Delete</button>
-      </div>
-    </li>`).join("");
-
-  $("#empty-state").classList.toggle("hidden", shown.length !== 0);
-  updateSummary();
-  updateDashboard();
+  const query = $("#search")?.value.trim().toLowerCase() || "";
+  const visible = tasks.filter(t => (filter === "all" || (filter === "done" ? t.done : !t.done)) && `${t.title} ${t.category} ${t.priority}`.toLowerCase().includes(query));
+  visible.sort((a, b) => sortMode === "oldest" ? a.createdAt - b.createdAt : b.createdAt - a.createdAt);
+  $("#task-list").innerHTML = visible.map(t => `<li class="task ${t.done ? "done" : ""}" data-id="${escape(t.id)}"><button class="check" data-action="toggle" type="button" aria-label="Toggle task"></button><div><div class="title">${escape(t.title)}</div><div class="meta"><span class="tag">${escape(t.category)}</span><span>${escape(t.priority)} priority</span></div></div><div class="task-actions"><button class="task-action" data-action="edit" type="button">Edit</button><button class="task-action delete" data-action="delete" type="button">Delete</button></div></li>`).join("");
+  $("#empty-state")?.classList.toggle("hidden", visible.length > 0);
+  const done = tasks.filter(t => t.done).length, total = tasks.length, percent = total ? Math.round(done / total * 100) : 0;
+  $("#total-count").textContent = total; $("#done-count").textContent = done; $("#left-count").textContent = total - done;
+  $("#progress-label").textContent = `${percent}%`; $("#progress-bar").style.width = `${percent}%`;
+  $("#progress-copy").textContent = total ? `${done} of ${total} tasks completed.` : "Add a task to get started.";
+  renderShop();
+  const progress = weekProgress();
+  $("#streak-total") && ($("#streak-total").textContent = currentStreak());
+  $("#goal-title") && ($("#goal-title").textContent = profile.goal);
+  $("#goal-progress-text") && ($("#goal-progress-text").textContent = `${progress.completed} / ${progress.target}`);
+  $("#goal-progress-bar") && ($("#goal-progress-bar").style.width = `${progress.percent}%`);
 }
 
-function awardCoinsForCompletion() {
-  const today = dateKey(Date.now());
-  if (!profile.streakDates.includes(today)) {
-    profile.streakDates.push(today);
-    profile.coins += 10;
-    saveProfile();
-    notify("+10 coins for your streak");
-  }
-
-  const goal = getGoalProgress();
-  if (goal.completed >= goal.target && goal.target > 0 && !profile.goalRewardedThisWeek) {
-    profile.coins += 25;
-    profile.goalRewardedThisWeek = true;
-    saveProfile();
-    notify("Goal cleared! +25 coins");
-  }
-
-  if (goal.completed < goal.target) {
-    profile.goalRewardedThisWeek = false;
-  }
-}
-
-function defaultGoalText(useCase) {
-  const templates = {
-    school: "Finish 3 study wins this week",
-    work: "Finish 3 work priorities this week",
-    life: "Finish 3 life admin tasks this week",
-    creative: "Finish 3 creative wins this week",
-    habit: "Finish 3 healthy habits this week"
-  };
-  return templates[useCase] || "Finish 3 important tasks this week";
-}
-
-function showOnboarding() {
-  const modal = $("#onboarding");
-  if (!modal) return;
-  modal.classList.remove("hidden");
-  const activeUseCase = $(".usecase-btn.active") || $(".usecase-btn");
-  if (activeUseCase) activeUseCase.classList.add("active");
-}
-
-function hideOnboarding() {
-  const modal = $("#onboarding");
-  if (modal) modal.classList.add("hidden");
-}
-
-function ensureProfileReady() {
-  if (!profile.useCase || !profile.goalTitle) {
-    showOnboarding();
-    return false;
-  }
-  hideOnboarding();
-  return true;
-}
-
-$("#task-form").addEventListener("submit", (event) => {
-  event.preventDefault();
-  const input = $("#task-input");
-  const title = input.value.trim();
-  if (!title) return input.focus();
-
-  tasks.unshift({
-    id: makeId(),
-    title,
-    category: $("#task-category").value,
-    priority: $("#task-priority").value,
-    done: false,
-    createdAt: Date.now(),
-    completedAt: null
-  });
-  save();
-  render();
-  input.value = "";
-  input.focus();
-  notify("Task added");
+$("#task-form").addEventListener("submit", event => {
+  event.preventDefault(); const input = $("#task-input"), title = input.value.trim(); if (!title) return input.focus();
+  tasks.unshift({ id: id(), title, category: $("#task-category")?.value || "other", priority: $("#task-priority")?.value || "medium", done: false, createdAt: Date.now(), completedAt: null });
+  save(); input.value = ""; render(); input.focus(); notify("Task added");
 });
-
-$("#task-list").addEventListener("click", (event) => {
-  const button = event.target.closest("[data-action]");
-  const item = event.target.closest(".task");
-  if (!button || !item) return;
-
-  const task = tasks.find((entry) => entry.id === item.dataset.id);
-  if (!task) return;
-
-  const wasDone = task.done;
-
+$("#task-list").addEventListener("click", event => {
+  const button = event.target.closest("[data-action]"), item = event.target.closest(".task"); if (!button || !item) return;
+  const task = tasks.find(t => t.id === item.dataset.id); if (!task) return;
   if (button.dataset.action === "toggle") {
-    task.done = !task.done;
-    task.completedAt = task.done ? Date.now() : null;
-    if (task.done && !wasDone) awardCoinsForCompletion();
-  }
-  if (button.dataset.action === "delete") tasks = tasks.filter((entry) => entry.id !== task.id);
-  if (button.dataset.action === "duplicate") {
-    tasks.unshift({ ...task, id: makeId(), title: `${task.title} (copy)`, done: false, completedAt: null, createdAt: Date.now() });
-    notify("Task duplicated");
-  }
-  if (button.dataset.action === "edit") {
-    const title = window.prompt("Edit task", task.title);
-    if (title?.trim()) task.title = title.trim();
-  }
-
-  save();
-  saveProfile();
-  render();
+    task.done = !task.done; task.completedAt = task.done ? Date.now() : null;
+    if (task.done) { profile.coins += 10; saveProfile(); notify("+10 coins earned"); }
+  } else if (button.dataset.action === "delete") tasks = tasks.filter(t => t.id !== task.id);
+  else if (button.dataset.action === "edit") { const title = prompt("Edit task", task.title); if (title?.trim()) task.title = title.trim(); }
+  save(); saveProfile(); render();
+});
+$("#search")?.addEventListener("input", render);
+document.querySelectorAll(".filter").forEach(button => button.addEventListener("click", () => { filter = button.dataset.filter; document.querySelectorAll(".filter").forEach(b => b.classList.toggle("active", b === button)); render(); }));
+$("#clear-completed")?.addEventListener("click", () => { tasks = tasks.filter(t => !t.done); save(); render(); notify("Completed tasks cleared"); });
+$("#new-plan")?.addEventListener("click", () => $("#task-input").focus());
+$("#start-today")?.addEventListener("click", () => $("#task-input").focus());
+$("#reset-data")?.addEventListener("click", () => { if (confirm("Delete all saved tasks?")) { tasks = []; save(); render(); notify("Planner reset"); } });
+$("#background-shop")?.addEventListener("click", event => {
+  const button = event.target.closest("[data-background]"); if (!button) return;
+  const background = BACKGROUNDS.find(bg => bg.id === button.dataset.background); if (!background) return;
+  const owned = profile.purchasedBackgrounds.includes(background.id);
+  if (!owned) { if (profile.coins < background.price) return notify(`Need ${background.price - profile.coins} more coins`); profile.coins -= background.price; profile.purchasedBackgrounds.push(background.id); notify(`${background.name} unlocked`); }
+  profile.selectedBackground = background.id; saveProfile(); setBackground(background); render();
 });
 
-$("#search").addEventListener("input", render);
-document.querySelectorAll(".filter").forEach((button) => button.addEventListener("click", () => {
-  filter = button.dataset.filter;
-  document.querySelectorAll(".filter").forEach((item) => item.classList.toggle("active", item === button));
-  render();
-}));
-
-const filterBar = document.querySelector(".filters");
-const sortButton = document.createElement("button");
-sortButton.className = "filter";
-sortButton.type = "button";
-sortButton.textContent = "Priority";
-sortButton.title = "Sort tasks by priority";
-filterBar.append(sortButton);
-sortButton.addEventListener("click", () => {
-  sortMode = sortMode === "priority" ? "newest" : "priority";
-  sortButton.classList.toggle("active", sortMode === "priority");
-  render();
-});
-
-$("#clear-completed").addEventListener("click", () => {
-  const removed = tasks.filter((task) => task.done).length;
-  tasks = tasks.filter((task) => !task.done);
-  save();
-  render();
-  notify(removed ? `${removed} completed task${removed === 1 ? "" : "s"} cleared` : "No completed tasks to clear");
-});
-
-$("#reset-data").addEventListener("click", () => {
-  if (window.confirm("Delete all saved tasks?")) {
-    tasks = [];
-    save();
-    render();
-    notify("Planner reset");
-  }
-});
-
-$("#new-plan").addEventListener("click", () => {
-  $("#task-input").focus();
-  document.querySelector(".planner").scrollIntoView({ behavior: "smooth", block: "start" });
-});
-$("#start-today").addEventListener("click", () => $("#task-input").focus());
-
-$("#edit-goal").addEventListener("click", () => {
-  const nextGoal = window.prompt("What is your weekly goal?", profile.goalTitle || defaultGoalText(profile.useCase));
-  if (!nextGoal || !nextGoal.trim()) return;
-  profile.goalTitle = nextGoal.trim();
-  saveProfile();
-  render();
-});
-
-$("#goal-target").addEventListener("input", (event) => {
-  const value = Number(event.target.value) || 1;
-  profile.goalTarget = Math.max(1, Math.min(50, value));
-  saveProfile();
-  render();
-});
-
-$("#start-planner").addEventListener("click", () => {
-  const useCaseButtons = document.querySelectorAll(".usecase-btn");
-  const selectedButton = [...useCaseButtons].find((button) => button.classList.contains("active"));
-  const useCase = selectedButton ? selectedButton.dataset.usecase : "school";
-  const goalInput = $("#goal-input");
-  const goalTarget = $("#goal-target");
-
-  profile.useCase = useCase;
-  profile.goalTarget = Number(goalTarget.value) || 3;
-  profile.goalTitle = goalInput.value.trim() || defaultGoalText(useCase);
-
-  saveProfile();
-  hideOnboarding();
-  render();
-  notify("Planner ready");
-});
-
-$("#goal-input").addEventListener("input", (event) => {
-  const value = event.target.value.trim();
-  if (!value) {
-    $("#goal-input").placeholder = defaultGoalText(profile.useCase || "school");
-  }
-});
-
-document.querySelectorAll(".usecase-btn").forEach((button) => {
-  button.addEventListener("click", () => {
-    document.querySelectorAll(".usecase-btn").forEach((item) => item.classList.toggle("active", item === button));
-    const goalInput = $("#goal-input");
-    const suggestedGoal = defaultGoalText(button.dataset.usecase);
-    goalInput.value = profile.goalTitle || suggestedGoal;
-  });
-});
-
-document.addEventListener("keydown", (event) => {
-  if (event.key === "/" && document.activeElement.tagName !== "INPUT") {
-    event.preventDefault();
-    $("#search").focus();
-  }
-  if (event.key === "Escape" && document.activeElement === $("#search")) {
-    $("#search").value = "";
-    $("#search").blur();
-    render();
-  }
-});
-
-const savedTheme = localStorage.getItem(THEME_KEY);
-if (savedTheme === "light") document.documentElement.classList.add("light");
-$("#theme-toggle").addEventListener("click", () => {
-  document.documentElement.classList.toggle("light");
-  localStorage.setItem(THEME_KEY, document.documentElement.classList.contains("light") ? "light" : "dark");
-});
-
-$("#background-shop").addEventListener("click", (event) => {
-  const button = event.target.closest("[data-background]");
-  if (!button) return;
-
-  const targetId = button.dataset.background;
-  const background = BACKGROUNDS.find((entry) => entry.id === targetId);
-  if (!background) return;
-
-  const hasOwned = profile.purchasedBackgrounds.includes(targetId);
-  if (!hasOwned) {
-    if (profile.coins < background.price) {
-      notify(`Need ${background.price - profile.coins} more coins`);
-      return;
-    }
-    profile.coins -= background.price;
-    profile.purchasedBackgrounds.push(targetId);
-    notify(`${background.name} unlocked`);
-  }
-
-  profile.selectedBackground = targetId;
-  saveProfile();
-  applyBackground(targetId);
-  render();
-});
-
-if (!profile.useCase) {
-  const firstUseCase = $(".usecase-btn");
-  if (firstUseCase) {
-    firstUseCase.classList.add("active");
-    $("#goal-input").value = defaultGoalText(firstUseCase.dataset.usecase);
-  }
-}
-
-applyBackground(profile.selectedBackground || "midnight");
-ensureProfileReady();
+const savedTheme = localStorage.getItem(THEME_KEY); if (savedTheme === "light") document.documentElement.classList.add("light");
+$("#theme-toggle")?.addEventListener("click", () => { document.documentElement.classList.toggle("light"); localStorage.setItem(THEME_KEY, document.documentElement.classList.contains("light") ? "light" : "dark"); });
+setBackground(BACKGROUNDS.find(bg => bg.id === profile.selectedBackground) || BACKGROUNDS[0]);
 render();
