@@ -1,0 +1,614 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Lapis Planner</title>
+    <style>
+      :root {
+        --bg: #f5f2ff;
+        --panel: #ffffff;
+        --ink: #1f1b2e;
+        --muted: #6d6a7c;
+        --primary: #7c5cff;
+        --primary-dark: #5d3ce8;
+        --accent: #e9e2ff;
+        --good: #2ec27e;
+        --warn: #ffb703;
+        --shadow: rgba(42, 28, 83, 0.12);
+      }
+
+      * { box-sizing: border-box; }
+
+      body {
+        margin: 0;
+        font-family: Arial, Helvetica, sans-serif;
+        background: linear-gradient(135deg, #f3edff 0%, #eef6ff 100%);
+        color: var(--ink);
+      }
+
+      .app {
+        max-width: 980px;
+        margin: 32px auto;
+        padding: 20px;
+      }
+
+      header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 20px;
+        gap: 12px;
+      }
+
+      .brand {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+      }
+
+      .logo {
+        width: 42px;
+        height: 42px;
+        border-radius: 12px;
+        display: grid;
+        place-items: center;
+        background: linear-gradient(135deg, var(--primary), #a08dff);
+        color: white;
+        font-weight: 700;
+        box-shadow: 0 10px 22px var(--shadow);
+      }
+
+      h1 {
+        margin: 0;
+        font-size: clamp(1.8rem, 2vw, 2.5rem);
+      }
+
+      .ghost-btn {
+        border: none;
+        background: rgba(124, 92, 255, 0.12);
+        color: var(--primary-dark);
+        border-radius: 999px;
+        padding: 10px 16px;
+        font-weight: 700;
+        cursor: pointer;
+      }
+
+      .panel {
+        background: var(--panel);
+        border-radius: 22px;
+        box-shadow: 0 12px 24px var(--shadow);
+        padding: 20px;
+      }
+
+      .hero {
+        display: grid;
+        grid-template-columns: 1.2fr 0.8fr;
+        gap: 20px;
+        margin-bottom: 20px;
+      }
+
+      .hero-copy {
+        padding: 22px;
+      }
+
+      .eyebrow {
+        display: inline-block;
+        background: var(--accent);
+        color: var(--primary-dark);
+        padding: 8px 12px;
+        border-radius: 999px;
+        font-size: 0.75rem;
+        font-weight: 700;
+        letter-spacing: 0.06em;
+        text-transform: uppercase;
+      }
+
+      .hero-copy h2 {
+        margin: 16px 0 10px;
+        font-size: clamp(2rem, 3vw, 3rem);
+        line-height: 1.08;
+      }
+
+      .hero-copy p {
+        margin: 0 0 22px;
+        color: var(--muted);
+        font-size: 1.05rem;
+        line-height: 1.6;
+      }
+
+      .actions {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 12px;
+      }
+
+      .primary-btn,
+      .secondary-btn {
+        border: none;
+        border-radius: 12px;
+        padding: 13px 18px;
+        font-weight: 700;
+        cursor: pointer;
+      }
+
+      .primary-btn {
+        background: var(--primary);
+        color: white;
+        box-shadow: 0 12px 20px rgba(124, 92, 255, 0.25);
+      }
+
+      .secondary-btn {
+        background: white;
+        color: var(--ink);
+        border: 1px solid rgba(0, 0, 0, 0.08);
+      }
+
+      .stats {
+        display: grid;
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        gap: 12px;
+        margin-top: 20px;
+      }
+
+      .stat {
+        background: #f8f6ff;
+        border: 1px solid rgba(124, 92, 255, 0.08);
+        border-radius: 16px;
+        padding: 16px;
+      }
+
+      .stat strong {
+        display: block;
+        font-size: 1.5rem;
+        margin-bottom: 6px;
+      }
+
+      .stat span {
+        color: var(--muted);
+        font-size: 0.9rem;
+      }
+
+      .focus-card {
+        padding: 22px;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+      }
+
+      .focus-card h3 {
+        margin-top: 0;
+        margin-bottom: 14px;
+      }
+
+      .mini-list {
+        list-style: none;
+        padding: 0;
+        margin: 0;
+        display: grid;
+        gap: 12px;
+      }
+
+      .mini-list li {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        background: #f9f8ff;
+        border-radius: 12px;
+        padding: 12px 10px;
+        color: var(--ink);
+      }
+
+      .dot {
+        width: 12px;
+        height: 12px;
+        border-radius: 50%;
+        background: linear-gradient(135deg, var(--primary), #9b7dff);
+      }
+
+      .main-grid {
+        display: grid;
+        grid-template-columns: 1.1fr 0.9fr;
+        gap: 20px;
+      }
+
+      .planner {
+        padding: 20px;
+      }
+
+      .planner-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 16px;
+      }
+
+      .planner-header h3 {
+        margin: 0;
+        font-size: 1.25rem;
+      }
+
+      .task-form {
+        display: grid;
+        grid-template-columns: 1fr auto;
+        gap: 10px;
+        margin-bottom: 18px;
+      }
+
+      .task-form input {
+        width: 100%;
+        padding: 14px 16px;
+        border: 1px solid rgba(0, 0, 0, 0.08);
+        border-radius: 12px;
+        background: #faf9ff;
+        font-size: 1rem;
+      }
+
+      .task-form button {
+        border: none;
+        background: var(--primary);
+        color: white;
+        font-weight: 700;
+        padding: 14px 18px;
+        border-radius: 12px;
+        cursor: pointer;
+      }
+
+      .task-list {
+        list-style: none;
+        padding: 0;
+        margin: 0;
+        display: grid;
+        gap: 12px;
+      }
+
+      .task-item {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 12px;
+        background: #fbfaff;
+        border: 1px solid rgba(124, 92, 255, 0.08);
+        border-radius: 14px;
+        padding: 14px 12px;
+      }
+
+      .task-left {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        flex: 1;
+      }
+
+      .checkbox {
+        width: 20px;
+        height: 20px;
+        border-radius: 6px;
+        border: 2px solid rgba(124, 92, 255, 0.4);
+        background: white;
+      }
+
+      .task-item.done .checkbox {
+        background: var(--good);
+        border-color: var(--good);
+        box-shadow: inset 0 0 0 4px white;
+      }
+
+      .task-item.done .task-text {
+        text-decoration: line-through;
+        color: var(--muted);
+      }
+
+      .task-text {
+        font-weight: 600;
+      }
+
+      .task-meta {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        color: var(--muted);
+        font-size: 0.82rem;
+      }
+
+      .tag {
+        padding: 6px 9px;
+        border-radius: 999px;
+        background: #efe9ff;
+        color: var(--primary-dark);
+        font-weight: 700;
+      }
+
+      .task-actions {
+        display: flex;
+        gap: 6px;
+      }
+
+      .tiny-btn {
+        border: none;
+        border-radius: 8px;
+        padding: 8px 10px;
+        cursor: pointer;
+        background: rgba(124, 92, 255, 0.08);
+        color: var(--primary-dark);
+        font-weight: 700;
+      }
+
+      .sidebar {
+        display: grid;
+        gap: 20px;
+      }
+
+      .insights,
+      .calendar {
+        padding: 20px;
+      }
+
+      .insights h3,
+      .calendar h3 {
+        margin-top: 0;
+        margin-bottom: 14px;
+      }
+
+      .progress-box {
+        background: linear-gradient(135deg, #f1ecff, #eef7ff);
+        border-radius: 16px;
+        padding: 16px;
+      }
+
+      .progress-bar {
+        height: 12px;
+        border-radius: 999px;
+        background: rgba(124, 92, 255, 0.12);
+        overflow: hidden;
+        margin: 12px 0 10px;
+      }
+
+      .progress-fill {
+        height: 100%;
+        width: 68%;
+        background: linear-gradient(90deg, var(--primary), #8b75ff);
+        border-radius: inherit;
+      }
+
+      .day-grid {
+        display: grid;
+        grid-template-columns: repeat(7, minmax(0, 1fr));
+        gap: 8px;
+      }
+
+      .day {
+        text-align: center;
+        padding: 12px 0;
+        border-radius: 12px;
+        color: var(--muted);
+        background: #f7f6ff;
+        font-weight: 700;
+      }
+
+      .day.active {
+        background: var(--primary);
+        color: white;
+        box-shadow: 0 10px 18px rgba(124, 92, 255, 0.23);
+      }
+
+      .day.event {
+        position: relative;
+      }
+
+      .day.event::after {
+        content: "";
+        position: absolute;
+        width: 7px;
+        height: 7px;
+        border-radius: 50%;
+        background: var(--warn);
+        bottom: 7px;
+        left: 50%;
+        transform: translateX(-50%);
+      }
+
+      @media (max-width: 760px) {
+        .hero,
+        .main-grid {
+          grid-template-columns: 1fr;
+        }
+
+        .stats {
+          grid-template-columns: 1fr;
+        }
+
+        .task-form {
+          grid-template-columns: 1fr;
+        }
+
+        header {
+          align-items: flex-start;
+          flex-direction: column;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="app">
+      <header>
+        <div class="brand">
+          <div class="logo">L</div>
+          <h1>Lapis Planner</h1>
+        </div>
+        <button class="ghost-btn">+ New plan</button>
+      </header>
+
+      <section class="hero panel">
+        <div class="hero-copy">
+          <span class="eyebrow">study flow</span>
+          <h2>plan better. study smarter. feel ahead.</h2>
+          <p>
+            Keep your tasks, deadlines, and class goals in one calm place so your week stays clear and your focus stays locked in.
+          </p>
+
+          <div class="actions">
+            <button class="primary-btn">Start today</button>
+            <button class="secondary-btn">View week</button>
+          </div>
+
+          <div class="stats">
+            <div class="stat">
+              <strong>12</strong>
+              <span>tasks this week</span>
+            </div>
+            <div class="stat">
+              <strong>4</strong>
+              <span>focus blocks</span>
+            </div>
+            <div class="stat">
+              <strong>86%</strong>
+              <span>momentum</span>
+            </div>
+          </div>
+        </div>
+
+        <aside class="focus-card">
+          <h3>today focus</h3>
+          <ul class="mini-list">
+            <li><span class="dot"></span> finish algebra review set</li>
+            <li><span class="dot"></span> prep bio flashcards</li>
+            <li><span class="dot"></span> 25 min reading sprint</li>
+          </ul>
+        </aside>
+      </section>
+
+      <div class="main-grid">
+        <section class="planner panel">
+          <div class="planner-header">
+            <h3>weekly planner</h3>
+            <span class="tag">3 done</span>
+          </div>
+
+          <form class="task-form" id="task-form">
+            <input id="task-input" type="text" placeholder="add a task..." aria-label="Add task" />
+            <button type="submit">Add</button>
+          </form>
+
+          <ul class="task-list" id="task-list">
+            <li class="task-item done">
+              <div class="task-left">
+                <span class="checkbox" aria-hidden="true"></span>
+                <span class="task-text">finish chemistry notes</span>
+              </div>
+              <div class="task-meta">
+                <span class="tag">school</span>
+                <div class="task-actions">
+                  <button class="tiny-btn" type="button">edit</button>
+                </div>
+              </div>
+            </li>
+
+            <li class="task-item">
+              <div class="task-left">
+                <span class="checkbox" aria-hidden="true"></span>
+                <span class="task-text">review history timeline</span>
+              </div>
+              <div class="task-meta">
+                <span class="tag">homework</span>
+                <div class="task-actions">
+                  <button class="tiny-btn" type="button">edit</button>
+                </div>
+              </div>
+            </li>
+
+            <li class="task-item">
+              <div class="task-left">
+                <span class="checkbox" aria-hidden="true"></span>
+                <span class="task-text">practice essay outline</span>
+              </div>
+              <div class="task-meta">
+                <span class="tag">english</span>
+                <div class="task-actions">
+                  <button class="tiny-btn" type="button">edit</button>
+                </div>
+              </div>
+            </li>
+          </ul>
+        </section>
+
+        <aside class="sidebar">
+          <section class="insights panel">
+            <h3>progress</h3>
+            <div class="progress-box">
+              <strong>68%</strong>
+              <div class="progress-bar">
+                <div class="progress-fill"></div>
+              </div>
+              <span>you are on track this week</span>
+            </div>
+          </section>
+
+          <section class="calendar panel">
+            <h3>calendar</h3>
+            <div class="day-grid" aria-label="week calendar">
+              <div class="day">M</div>
+              <div class="day">T</div>
+              <div class="day">W</div>
+              <div class="day active">T</div>
+              <div class="day">F</div>
+              <div class="day event">S</div>
+              <div class="day">S</div>
+            </div>
+          </section>
+        </aside>
+      </div>
+    </div>
+
+    <script>
+      const form = document.getElementById('task-form');
+      const input = document.getElementById('task-input');
+      const taskList = document.getElementById('task-list');
+
+      form.addEventListener('submit', function (event) {
+        event.preventDefault();
+
+        const value = input.value.trim();
+        if (!value) return;
+
+        const li = document.createElement('li');
+        li.className = 'task-item';
+
+        li.innerHTML = `
+          <div class="task-left">
+            <span class="checkbox" aria-hidden="true"></span>
+            <span class="task-text">${value}</span>
+          </div>
+          <div class="task-meta">
+            <span class="tag">new</span>
+            <div class="task-actions">
+              <button class="tiny-btn" type="button">edit</button>
+            </div>
+          </div>
+        `;
+
+        taskList.appendChild(li);
+        input.value = '';
+        input.focus();
+      });
+
+      taskList.addEventListener('click', function (event) {
+        const target = event.target;
+        if (!(target instanceof HTMLElement)) return;
+
+        if (target.classList.contains('checkbox')) {
+          target.parentElement.parentElement.classList.toggle('done');
+        }
+
+        if (target.classList.contains('tiny-btn')) {
+          const item = target.closest('.task-item');
+          const text = item.querySelector('.task-text');
+          const next = window.prompt('edit task', text.textContent);
+          if (next && next.trim()) {
+            text.textContent = next.trim();
+          }
+        }
+      });
+    </script>
+  </body>
+</html>
