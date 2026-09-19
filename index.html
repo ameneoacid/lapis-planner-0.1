@@ -1,44 +1,60 @@
 <!doctype html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <meta name="description" content="A simple, focused student task planner." />
-  <title>Lapis Planner</title>
-  <link rel="stylesheet" href="css/style.css" />
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="theme-color" content="#080b16">
+  <meta name="description" content="Lapis is a calm, focused student task planner for turning a busy week into clear next steps.">
+  <title>Lapis — Your week, in focus</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/style.css">
 </head>
 <body>
+  <div class="ambient ambient-one" aria-hidden="true"></div>
+  <div class="ambient ambient-two" aria-hidden="true"></div>
   <main class="app">
     <header class="topbar">
-      <a class="brand" href="./" aria-label="Lapis Planner home"><span class="brand-mark">L</span><span><strong>Lapis Planner</strong><small>focus mode dashboard</small></span></a>
+      <a class="brand" href="./" aria-label="Lapis Planner home">
+        <span class="brand-mark">✦</span>
+        <span><strong>Lapis</strong><small>quietly get things done</small></span>
+      </a>
       <div class="top-actions">
-        <label class="search"><span aria-hidden="true">⌕</span><input id="search" type="search" placeholder="Search tasks..." aria-label="Search tasks" /></label>
-        <button id="theme-toggle" class="icon-btn" type="button" aria-label="Toggle dark mode">☼</button>
-        <button id="new-plan" class="primary-btn" type="button">+ New plan</button>
+        <label class="search"><span aria-hidden="true">⌕</span><input id="search" type="search" placeholder="Search your plans…" aria-label="Search tasks"><kbd>/</kbd></label>
+        <button id="theme-toggle" class="icon-btn" type="button" aria-label="Toggle light mode">☼</button>
+        <button id="new-plan" class="primary-btn" type="button"><span>＋</span> New task</button>
       </div>
     </header>
 
     <section class="hero panel">
-      <div>
-        <span class="eyebrow">Study flow</span>
-        <h1>Turn chaos into a calm week.</h1>
-        <p>Plan classes, track deadlines, and protect your focus with one clean command center.</p>
-        <div class="hero-actions"><button id="start-today" class="primary-btn" type="button">Start today</button><button id="clear-completed" class="ghost-btn" type="button">Clear completed</button></div>
+      <div class="hero-copy">
+        <span class="eyebrow"><i></i> Your personal command center</span>
+        <h1>Make space for<br><em>what matters.</em></h1>
+        <p>One calm place for classes, deadlines, and the small steps that move your week forward.</p>
+        <div class="hero-actions"><button id="start-today" class="primary-btn" type="button">Plan your day <span>→</span></button><button id="clear-completed" class="ghost-btn" type="button">Clear completed</button></div>
       </div>
-      <div class="score panel-soft"><span>Weekly progress</span><strong id="progress-label">0%</strong><div class="progress"><i id="progress-bar"></i></div><small id="progress-copy">Add a task to get started.</small></div>
+      <div class="focus-card">
+        <div class="focus-top"><span class="eyebrow">Weekly rhythm</span><span class="sparkle">✦</span></div>
+        <div class="ring-wrap"><div class="ring"><strong id="progress-label">0%</strong><span>complete</span></div></div>
+        <div class="progress"><i id="progress-bar"></i></div>
+        <p id="progress-copy">Add a task to get started.</p>
+      </div>
     </section>
 
     <section class="stats" aria-label="Planner summary">
-      <div class="stat panel"><strong id="total-count">0</strong><span>total tasks</span></div><div class="stat panel"><strong id="done-count">0</strong><span>completed</span></div><div class="stat panel"><strong id="left-count">0</strong><span>left to do</span></div>
+      <div class="stat panel"><span class="stat-icon violet">◈</span><div><strong id="total-count">0</strong><span>all tasks</span></div></div>
+      <div class="stat panel"><span class="stat-icon mint">✓</span><div><strong id="done-count">0</strong><span>completed</span></div></div>
+      <div class="stat panel"><span class="stat-icon amber">◷</span><div><strong id="left-count">0</strong><span>still to do</span></div></div>
     </section>
 
     <section class="planner panel">
-      <div class="section-head"><div><span class="eyebrow">Your schedule</span><h2>Weekly planner</h2></div><div class="filters"><button class="filter active" data-filter="all" type="button">All</button><button class="filter" data-filter="active" type="button">Active</button><button class="filter" data-filter="done" type="button">Done</button></div></div>
-      <form id="task-form" class="task-form"><input id="task-input" required maxlength="120" type="text" placeholder="Add a task..." aria-label="Task name" /><select id="task-category" aria-label="Task category"><option>school</option><option>homework</option><option>project</option><option>personal</option><option>other</option></select><select id="task-priority" aria-label="Task priority"><option>high</option><option selected>medium</option><option>low</option></select><button class="primary-btn" type="submit">Add task</button></form>
-      <ul id="task-list" class="task-list" aria-live="polite"></ul><p id="empty-state" class="empty">No tasks here yet. Add one above.</p>
+      <div class="section-head"><div><span class="eyebrow">The dashboard</span><h2>This week</h2></div><div class="filters"><button class="filter active" data-filter="all" type="button">All</button><button class="filter" data-filter="active" type="button">In progress</button><button class="filter" data-filter="done" type="button">Done</button></div></div>
+      <form id="task-form" class="task-form"><span class="plus">＋</span><input id="task-input" required maxlength="120" type="text" placeholder="What needs your attention?" aria-label="Task name"><select id="task-category" aria-label="Task category"><option value="study">Study</option><option value="class">Class</option><option value="personal">Personal</option><option value="other">Other</option></select><select id="task-priority" aria-label="Task priority"><option value="high">High priority</option><option value="medium" selected>Medium priority</option><option value="low">Low priority</option></select><button class="add-btn" type="submit">Add task <span>↵</span></button></form>
+      <ul id="task-list" class="task-list" aria-live="polite"></ul><div id="empty-state" class="empty"><span>✦</span><strong>Your list is clear</strong><p>Capture a task above and turn intention into momentum.</p></div>
     </section>
 
-    <footer><span>Saved automatically in this browser.</span><button id="reset-data" class="link-btn" type="button">Reset all data</button></footer>
+    <footer><span><i class="status-dot"></i> Saved locally in your browser</span><button id="reset-data" class="link-btn" type="button">Reset all data</button></footer>
   </main>
   <script src="js/app.js" defer></script>
 </body>
