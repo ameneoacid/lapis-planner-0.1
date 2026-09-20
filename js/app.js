@@ -9,29 +9,6 @@ const load = (key, fallback) => { try { return JSON.parse(localStorage.getItem(k
 const save = (key, value) => localStorage.setItem(key, JSON.stringify(value));
 const dayKey = (value) => new Date(value).toISOString().slice(0, 10);
 
-const DEFAULT_PRESETS = [
-  {
-    id: "morning-flow",
-    name: "Morning flow",
-    tasks: [
-      { title: "Brush teeth", category: "health", priority: "high", time: "07:15" },
-      { title: "Pray Fajr", category: "faith", priority: "high", time: "05:15" },
-      { title: "Drink water", category: "health", priority: "medium", time: "07:30" },
-      { title: "Check your top 3 priorities", category: "work", priority: "medium", time: "08:00" }
-    ]
-  },
-  {
-    id: "night-flow",
-    name: "Night reset",
-    tasks: [
-      { title: "Brush teeth", category: "health", priority: "high", time: "21:30" },
-      { title: "Pray Isha", category: "faith", priority: "high", time: "21:45" },
-      { title: "Prepare tomorrow", category: "personal", priority: "medium", time: "22:00" },
-      { title: "Phone off / wind down", category: "health", priority: "medium", time: "22:15" }
-    ]
-  }
-];
-
 const BACKGROUNDS = [
   ["midnight", "Midnight", 0, ["#080b16", "#312e81"]], ["sunset", "Sunset", 20, ["#7c2d3d", "#f59e0b"]],
   ["forest", "Forest", 35, ["#102a2a", "#4d7c0f"]], ["aurora", "Aurora", 45, ["#164e63", "#6d28d9"]],
@@ -60,9 +37,9 @@ let tasks = load(TASKS_KEY, []).map((task) => ({
   reminded: Boolean(task.reminded)
 }));
 
-let routines = Array.isArray(load(PRESETS_KEY, null))
-  ? load(PRESETS_KEY, DEFAULT_PRESETS).map(normalizePreset)
-  : DEFAULT_PRESETS.map(normalizePreset);
+let routines = Array.isArray(load(PRESETS_KEY, []))
+  ? load(PRESETS_KEY, []).map(normalizePreset)
+  : [];
 
 let profile = { coins: 0, selectedBackground: "midnight", purchasedBackgrounds: ["midnight"], ...load(PROFILE_KEY, {}) };
 let filter = "all";
@@ -279,29 +256,45 @@ function renderRoutines() {
     $("footer")?.before(section);
   }
 
-  section.innerHTML = `
-    <div class="section-head">
-      <div><span class="eyebrow">Daily flow</span><h2>Saved routines</h2></div>
-      <button class="primary-btn" data-routine-action="create" type="button">New preset</button>
-    </div>
-    <div class="routine-grid">
-      ${routines.map((preset) => `
-        <article class="preset-card">
-          <div class="preset-top">
-            <h3>${esc(preset.name)}</h3>
-            <div class="preset-actions">
-              <button class="mini-btn" data-routine-action="add-${preset.id}" type="button">Add today</button>
-              <button class="mini-btn" data-routine-action="edit-${preset.id}" type="button">Edit</button>
-              <button class="mini-btn danger" data-routine-action="delete-${preset.id}" type="button">Delete</button>
+  if (!routines.length) {
+    section.innerHTML = `
+      <div class="section-head">
+        <div><span class="eyebrow">Daily flow</span><h2>Routines</h2></div>
+        <button class="primary-btn" data-routine-action="create" type="button">New routine</button>
+      </div>
+      <div class="empty-copy compact">
+        Create a morning, prayer, study, or night routine and add it to today in one tap.
+      </div>
+    `;
+  } else {
+    section.innerHTML = `
+      <div class="section-head">
+        <div><span class="eyebrow">Daily flow</span><h2>Routines</h2></div>
+        <button class="primary-btn" data-routine-action="create" type="button">New routine</button>
+      </div>
+      <div class="routine-grid">
+        ${routines.map((preset) => `
+          <article class="routine-card">
+            <div class="routine-header">
+              <div>
+                <strong>${esc(preset.name)}</strong>
+                <span>${preset.tasks.length} tasks</span>
+              </div>
+              <div class="routine-actions">
+                <button class="mini-btn" data-routine-action="add-${preset.id}" type="button">Add today</button>
+                <button class="mini-btn" data-routine-action="edit-${preset.id}" type="button">Edit</button>
+                <button class="mini-btn danger" data-routine-action="delete-${preset.id}" type="button">Delete</button>
+              </div>
             </div>
-          </div>
-          <ul class="preset-task-list">
-            ${preset.tasks.map((task) => `<li><span>${esc(task.title)}</span><small>${task.time ? task.time : "Any time"}</small></li>`).join("")}
-          </ul>
-        </article>
-      `).join("") || '<p class="empty-copy">No saved routines yet. Create a preset for your morning or night flow.</p>'}
-    </div>
-  `;
+            <ul class="routine-tasks">
+              ${preset.tasks.slice(0, 3).map((task) => `<li><span>${esc(task.title)}</span><small>${task.time || "Any time"}</small></li>`).join("")}
+              ${preset.tasks.length > 3 ? `<li class="routine-more">+${preset.tasks.length - 3} more</li>` : ""}
+            </ul>
+          </article>
+        `).join("")}
+      </div>
+    `;
+  }
 
   section.querySelectorAll("[data-routine-action]").forEach((button) => {
     const action = button.dataset.routineAction;
