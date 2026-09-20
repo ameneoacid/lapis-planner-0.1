@@ -49,13 +49,45 @@
     </section>
 
     <section class="planner panel">
-      <div class="section-head"><div><span class="eyebrow">The dashboard</span><h2>This week</h2></div><div class="filters"><button class="filter active" data-filter="all" type="button">All</button><button class="filter" data-filter="active" type="button">In progress</button><button class="filter" data-filter="done" type="button">Done</button></div></div>
-      <form id="task-form" class="task-form"><span class="plus">＋</span><input id="task-input" required maxlength="120" type="text" placeholder="What needs your attention?" aria-label="Task name"><select id="task-category" aria-label="Task category"><option value="study">Study</option><option value="class">Class</option><option value="personal">Personal</option><option value="other">Other</option></select><select id="task-priority" aria-label="Task priority"><option value="high">High priority</option><option value="medium" selected>Medium priority</option><option value="low">Low priority</option></select><button class="add-btn" type="submit">Add task <span>↵</span></button></form>
-      <ul id="task-list" class="task-list" aria-live="polite"></ul><div id="empty-state" class="empty"><span>✦</span><strong>Your list is clear</strong><p>Capture a task above and turn intention into momentum.</p></div>
+      <div class="section-head">
+        <div><span class="eyebrow">The dashboard</span><h2>This week</h2></div>
+        <div class="filters">
+          <button class="filter active" data-filter="all" type="button">All</button>
+          <button class="filter" data-filter="active" type="button">Active</button>
+          <button class="filter" data-filter="done" type="button">Done</button>
+        </div>
+      </div>
+
+      <form id="task-form" class="task-form" autocomplete="off">
+        <span class="plus">＋</span>
+        <input id="task-input" required maxlength="120" type="text" placeholder="What needs your attention?" aria-label="Task name">
+        <select id="task-category" aria-label="Task category">
+          <option value="study">Study</option>
+          <option value="work">Work</option>
+          <option value="personal">Personal</option>
+          <option value="health">Health</option>
+          <option value="side quest">Side quest</option>
+          <option value="other">Other</option>
+        </select>
+        <select id="task-priority" aria-label="Task priority">
+          <option value="high">High</option>
+          <option value="medium" selected>Medium</option>
+          <option value="low">Low</option>
+        </select>
+        <input id="task-due-date" type="date" aria-label="Task due date">
+        <input id="task-reminder" type="datetime-local" aria-label="Task reminder">
+        <button class="primary-btn" type="submit">Add task</button>
+      </form>
+
+      <ul id="task-list" class="task-list" aria-live="polite"></ul>
+      <div id="empty-state" class="empty"><span>✦</span><strong>Your list is clear</strong><p>Capture a task above and turn intention into progress.</p></div>
     </section>
 
-    <footer><span><i class="status-dot"></i> Saved locally in your browser</span><button id="reset-data" class="link-btn" type="button">Reset all data</button></footer>
+    <footer>
+      <span><i class="status-dot"></i> Saved locally in your browser</span>
+      <button id="reset-data" class="link-btn" type="button">Reset all data</button>
+    </footer>
   </main>
-  <script src="js/app.js" defer></script>
+  <script src="js/app.js?v=2026-09-20" defer></script>
 </body>
 </html>
