@@ -12,37 +12,82 @@
     "one-piece": "https://images.unsplash.com/photo-1500534623283-312aade485b7?auto=format&fit=crop&w=900&q=80",
     longyearbyen: "https://source.unsplash.com/900x600/?longyearbyen,svalbard,arctic"
   };
-  const getProfile = () => { try { return JSON.parse(localStorage.getItem(profileKey)) || {}; } catch { return {}; } };
-  const decorateShop = () => document.querySelectorAll(".shop-item").forEach((item) => {
-    const id = item.dataset.background;
-    const swatch = item.querySelector(".shop-swatch");
-    if (swatch && images[id]) swatch.style.backgroundImage = `linear-gradient(180deg, transparent 25%, rgba(3,7,18,.65)), url(\"${images[id]}\")`;
-  });
+
+  const getProfile = () => {
+    try { return JSON.parse(localStorage.getItem(profileKey)) || {}; }
+    catch { return {}; }
+  };
+
+  const decorateShop = () => {
+    document.querySelectorAll(".shop-item").forEach((item) => {
+      const id = item.dataset.background;
+      const swatch = item.querySelector(".shop-swatch");
+      if (swatch && images[id]) {
+        swatch.style.backgroundImage = `linear-gradient(180deg, transparent 25%, rgba(3,7,18,.65)), url("${images[id]}")`;
+      }
+    });
+  };
+
   const addAiLauncher = () => {
     const panel = document.querySelector("#ai-assistant");
-    if (!panel || document.querySelector(".ai-fab")) return;
+    if (!panel) return;
+    if (document.querySelector(".ai-fab")) return;
+
     panel.hidden = true;
     panel.setAttribute("aria-hidden", "true");
+    panel.classList.remove("ai-open");
+
     const fab = document.createElement("button");
     fab.className = "ai-fab";
     fab.type = "button";
     fab.setAttribute("aria-label", "Open Lapis AI assistant");
     fab.setAttribute("aria-expanded", "false");
     fab.textContent = "✦";
+
     const close = document.createElement("button");
     close.className = "ai-close";
     close.type = "button";
     close.setAttribute("aria-label", "Close Lapis AI assistant");
     close.textContent = "×";
     panel.prepend(close);
-    const shut = () => { panel.hidden = true; panel.classList.remove("ai-open"); panel.setAttribute("aria-hidden", "true"); fab.setAttribute("aria-expanded", "false"); };
-    const open = () => { panel.hidden = false; panel.classList.add("ai-open"); panel.setAttribute("aria-hidden", "false"); fab.setAttribute("aria-expanded", "true"); panel.querySelector("#ai-input")?.focus(); };
-    fab.addEventListener("click", () => panel.hidden ? open() : shut());
+
+    const shut = () => {
+      panel.hidden = true;
+      panel.classList.remove("ai-open");
+      panel.setAttribute("aria-hidden", "true");
+      fab.setAttribute("aria-expanded", "false");
+    };
+
+    const open = () => {
+      panel.hidden = false;
+      panel.classList.add("ai-open");
+      panel.setAttribute("aria-hidden", "false");
+      fab.setAttribute("aria-expanded", "true");
+      const input = panel.querySelector("#ai-input");
+      if (input) input.focus();
+    };
+
+    fab.addEventListener("click", () => (panel.hidden ? open() : shut()));
     close.addEventListener("click", shut);
-    document.addEventListener("keydown", (event) => { if (event.key === "Escape") shut(); });
+    panel.querySelectorAll("[data-ai-prompt]").forEach((button) => {
+      button.addEventListener("click", () => {
+        const input = panel.querySelector("#ai-input");
+        if (input) input.value = button.dataset.aiPrompt;
+      });
+    });
+    document.addEventListener("keydown", (event) => {
+      if (event.key === "Escape") shut();
+    });
     document.body.append(fab);
   };
-  const sync = () => { const profile = getProfile(); document.body.dataset.background = profile.selectedBackground || "midnight"; decorateShop(); addAiLauncher(); };
+
+  const sync = () => {
+    const profile = getProfile();
+    document.body.dataset.background = profile.selectedBackground || "midnight";
+    decorateShop();
+    addAiLauncher();
+  };
+
   sync();
   new MutationObserver(sync).observe(document.body, { childList: true, subtree: true });
 })();
