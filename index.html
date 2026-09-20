@@ -10,7 +10,6 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="css/style.css">
-  <link rel="stylesheet" href="css/assistant.css">
 </head>
 <body>
   <div class="ambient ambient-one" aria-hidden="true"></div>
@@ -50,7 +49,7 @@
       <div class="stat panel"><span class="stat-icon amber">◷</span><div><strong id="left-count">0</strong><span>still to do</span></div></div>
     </section>
 
-    <section class="dashboard-shell">
+    <section class="assistant-layout">
       <section class="planner panel">
         <div class="section-head">
           <div><span class="eyebrow">The dashboard</span><h2>This week</h2></div>
@@ -90,28 +89,21 @@
         </div>
       </section>
 
-      <aside id="ai-assistant" class="ai-shell panel" aria-label="Lapis AI assistant">
-        <div class="ai-header">
+      <aside id="ai-assistant" class="ai-assistant panel" aria-label="AI planner assistant">
+        <div class="ai-heading">
           <div><span class="eyebrow">Lapis AI</span><h2>Planner assistant</h2></div>
-          <span class="ai-badge">✦</span>
+          <span class="ai-orb">✦</span>
         </div>
-
-        <div class="chat-thread" id="chat-thread" aria-live="polite">
-          <div class="message assistant">
-            <div class="bubble">Hi — what would you like to plan today?</div>
-          </div>
+        <p class="ai-intro">Tell me what you need to plan and I’ll help break it into clear next steps.</p>
+        <div class="ai-chips">
+          <button type="button" data-ai-prompt="What should I focus on today?">Focus today</button>
+          <button type="button" data-ai-prompt="Help me plan my tasks">Plan my tasks</button>
+          <button type="button" data-ai-prompt="Make a routine from my tasks">Build a routine</button>
         </div>
-
-        <div class="prompt-row">
-          <button class="prompt-chip" data-prompt="What should I focus on today?" type="button">Focus today</button>
-          <button class="prompt-chip" data-prompt="Help me plan my tasks" type="button">Plan my tasks</button>
-          <button class="prompt-chip" data-prompt="Make a routine from my tasks" type="button">Build a routine</button>
-        </div>
-
-        <div class="composer">
-          <textarea id="ai-input" rows="3" placeholder="Ask Lapis for help with your day..."></textarea>
-          <button id="ai-ask" class="primary-btn" type="button">Send</button>
-        </div>
+        <label class="ai-label" for="ai-input">Message</label>
+        <textarea id="ai-input" rows="4" placeholder="e.g. I need to study, pray, exercise, and clean today"></textarea>
+        <button id="ai-ask" class="primary-btn ai-ask" type="button">Send <span>→</span></button>
+        <div id="ai-response" class="ai-response" aria-live="polite">Send a message and I’ll reply here.</div>
       </aside>
     </section>
 
@@ -122,6 +114,6 @@
   </main>
 
   <script src="js/app.js?v=2026-09-20" defer></script>
-  <script src="js/assistant.js?v=2" defer></script>
+  <script src="js/assistant.js?v=1" defer></script>
 </body>
 </html>
