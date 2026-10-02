@@ -1,0 +1,13 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" role="img" aria-label="Lapis logo">
+  <defs>
+    <linearGradient id="lapisGlow" x1="0%" x2="100%" y1="0%" y2="100%">
+      <stop offset="0%" stop-color="#b794ff"/>
+      <stop offset="50%" stop-color="#8b5cf6"/>
+      <stop offset="100%" stop-color="#63e6d5"/>
+    </linearGradient>
+  </defs>
+  <rect width="64" height="64" rx="18" fill="#08151d"/>
+  <circle cx="32" cy="32" r="24" fill="none" stroke="rgba(255,255,255,0.10)"/>
+  <path d="M32 11 46 32 32 53 18 32Z" fill="url(#lapisGlow)" opacity="0.96"/>
+  <path d="M32 21 40 32 32 43 24 32Z" fill="#d9d6ff" opacity="0.8"/>
+</svg>
